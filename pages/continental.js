@@ -30,7 +30,7 @@ export default function ContinentalPage() {
                 document.removeEventListener('click', handleFirstInteraction);
             };
         }
-    }, []);
+    }, [isPlaying]);
 
     // Scroll-Animationen
     useEffect(() => {
