@@ -1,11 +1,13 @@
-.continental-container {
+/* Korrigierte CSS-Module mit Next.js-kompatibler Syntax */
+.continentalContainer {
     scroll-behavior: smooth;
     scroll-snap-type: y mandatory;
     overflow-y: scroll;
     height: 100vh;
+    background-color: #0a0a0a;
 }
 
-.hero-section {
+.heroSection {
     height: 100vh;
     position: relative;
     scroll-snap-align: start;
@@ -13,9 +15,12 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    background-image: url('/static/images/backgrounds/the-continental-background.webp');
+    background-size: cover;
+    background-position: center;
 }
 
-.gold-overlay {
+.goldOverlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -24,7 +29,7 @@
     background: linear-gradient(to bottom, rgba(197, 160, 71, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%);
 }
 
-.continental-nav {
+.continentalNav {
     position: fixed;
     top: 0;
     width: 100%;
@@ -35,7 +40,7 @@
     z-index: 1000;
 }
 
-.gold-button {
+.goldButton {
     background: #c5a047;
     color: #0a0a0a;
     padding: 1rem 2rem;
@@ -46,7 +51,12 @@
     font-family: 'Cormorant Garamond';
 }
 
-.content-section {
+.goldButton:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(197, 160, 71, 0.5);
+}
+
+.contentSection {
     min-height: 100vh;
     scroll-snap-align: start;
     position: relative;
@@ -55,27 +65,16 @@
     opacity: 0;
 }
 
-.section-title {
+.sectionTitle {
     font-size: 3rem;
     border-bottom: 2px solid #c5a047;
     padding-bottom: 1rem;
     margin-bottom: 2rem;
-}
-
-/* Animations */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(50px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    color: #c5a047;
 }
 
 /* Audio-Steuerung */
-.audio-controls {
+.audioControls {
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -87,12 +86,40 @@
     border: 1px solid #c5a047;
 }
 
-.audio-controls button {
+.audioControls button {
     background: none;
     border: none;
     font-size: 1.5rem;
+    color: #c5a047;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+/* continental.module.css */
+.sectionContent {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 4rem 2rem;
 }
 
-.heroSection {
-    background-image: url('/the-continental-background.webp');
+.sectionBody {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* Für Tokenomics-Sektion */
+.tokenGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.tokenItem {
+    background: rgba(197, 160, 71, 0.1);
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid #c5a047;
 }

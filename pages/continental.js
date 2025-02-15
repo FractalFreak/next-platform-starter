@@ -1,33 +1,58 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import dynamic from 'next/dynamic';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import styles from '../styles/continental.module.css';
 
+// Initialisiere GSAP Plugins
 gsap.registerPlugin(ScrollTrigger);
 
 export default function ContinentalPage() {
     const sectionsRef = useRef([]);
     const containerRef = useRef(null);
     const audioRef = useRef(null);
+    const [isMounted, setIsMounted] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
-    const toggleAudio = () => {
-        if (!audioRef.current) return;
-        isPlaying ? audioRef.current.pause() : audioRef.current.play();
-        setIsPlaying(!isPlaying);
-    };
 
-    // Audio-Handling
+    // 1. SSR-Sicherung
     useEffect(() => {
-        if (typeof window === 'undefined') return;
+        setIsMounted(true);
+        return () => setIsMounted(false);
+    }, []);
+
+    // 2. Audio-Handling
+    useEffect(() => {
+        if (!isMounted) return;
 
         audioRef.current = new Audio('/static/sounds/Baccara-Yes-Sir.mp3');
         audioRef.current.loop = true;
-    }, []);
 
-    // Scroll-Animationen
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+        };
+    }, [isMounted]);
+
+    // 3. Event-Handler
+    const toggleAudio = useCallback(() => {
+        if (!audioRef.current) return;
+
+        if (isPlaying) {
+            audioRef.current.pause();
+        } else {
+            audioRef.current.play();
+        }
+        setIsPlaying(!isPlaying);
+    }, [isPlaying]);
+
+    // 4. Scroll-Animationen
     useEffect(() => {
-        gsap.utils.toArray(`.${styles.contentSection}`).forEach((section) => {
+        if (!isMounted) return;
+
+        const sections = gsap.utils.toArray(`.${styles.contentSection}`);
+
+        sections.forEach((section) => {
             gsap.from(section, {
                 opacity: 0,
                 y: 50,
@@ -35,72 +60,46 @@ export default function ContinentalPage() {
                 scrollTrigger: {
                     trigger: section,
                     start: 'top center+=100',
-                    toggleActions: 'play none none reverse'
+                    toggleActions: 'play none none reverse',
+                    markers: process.env.NODE_ENV === 'development'
                 }
             });
         });
 
-        // Scroll-Lock Mechanismus
-        const handleWheel = (e) => e.deltaY < 0 && e.preventDefault();
+        // 5. Scroll-Lock
+        const handleWheel = (e) => {
+            if (e.deltaY < 0) e.preventDefault();
+        };
+
         window.addEventListener('wheel', handleWheel, { passive: false });
         return () => window.removeEventListener('wheel', handleWheel);
-    }, []);
+    }, [isMounted]);
 
-    const handleFirstInteraction = useCallback(() => {
-        if (!isPlaying && audioRef.current) {
-            audioRef.current.play();
-            setIsPlaying(true);
-        }
-    }, [isPlaying]);
+    // 6. ScrollSection-Komponente
+    const ScrollSection = ({ children, id, title }) => (
+        <section id={id} className={styles.contentSection} ref={(el) => el && sectionsRef.current.push(el)}>
+            <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>{title}</h2>
+            </div>
+            {children}
+        </section>
+    );
 
-    useEffect(() => {
-        window.addEventListener('click', handleFirstInteraction);
-
-        return () => {
-            audioRef.current?.pause();
-            window.removeEventListener('click', handleFirstInteraction);
-        };
-    }, [handleFirstInteraction]);
-
-    const ScrollSection = ({ children, id, title }) => {
-        const sectionRef = useRef(null);
-
-        useEffect(() => {
-            gsap.from(sectionRef.current, {
-                opacity: 0,
-                y: 50,
-                duration: 1,
-                scrollTrigger: {
-                    trigger: sectionRef.current,
-                    start: 'top center+=100',
-                    toggleActions: 'play none none reverse'
-                }
-            });
-        }, []);
-
-        return (
-            <section id={id} className={styles.contentSection} ref={sectionRef}>
-                {/* ... */}
-            </section>
-        );
-    };
+    if (!isMounted) return null;
 
     return (
         <div className={styles.continentalContainer} ref={containerRef}>
             {/* Audio Controls */}
             <div className={styles.audioControls}>
-                <button
-                    onClick={() => {
-                        isPlaying ? audioRef.current.pause() : audioRef.current.play();
-                        setIsPlaying(!isPlaying);
-                    }}
-                >
-                    {isPlaying ? '❚❚' : '▶'}
-                </button>
+                <button onClick={toggleAudio}>{isPlaying ? '❚❚' : '▶'}</button>
             </div>
-
             {/* Hero Section */}
-            <section className={styles.heroSection}>
+            <section
+                className={styles.heroSection}
+                style={{
+                    backgroundImage: 'url("/static/images/backgrounds/the-continental-background.webp")'
+                }}
+            >
                 <div className={styles.goldOverlay}></div>
                 <nav className={styles.continentalNav}>
                     <div className={styles.navLogo}>THE CONTINENTAL</div>
@@ -119,19 +118,32 @@ export default function ContinentalPage() {
                     </div>
                 </div>
             </section>
-
             {/* Content Sections */}
+            <ScrollSection id="tokenomics" title="Tokenomics" />
+            <ScrollSection id="roadmap" title="Roadmap" />
+            <ScrollSection id="whitepaper" title="Whitepaper" />
             <ScrollSection id="tokenomics" title="Tokenomics">
-                {/* Content here */}
+                <div className={styles.tokenGrid}>
+                    <div className={styles.tokenItem}>
+                        <h3>Token Supply</h3>
+                        <p>Total: 1,000,000,000 $CONT</p>
+                        <p>Burned: 30%</p>
+                    </div>
+                    <div className={styles.tokenItem}>
+                        <h3>Distribution</h3>
+                        <p>Liquidity: 50%</p>
+                        <p>Community: 30%</p>
+                        <p>Team: 20%</p>
+                    </div>
+                    <div className={styles.tokenItem}>
+                        <h3>Features</h3>
+                        <p>0% Taxes</p>
+                        <p>LP Locked</p>
+                        <p>Renounced CA</p>
+                    </div>
+                </div>
             </ScrollSection>
-
-            <ScrollSection id="roadmap" title="Roadmap">
-                {/* Content here */}
-            </ScrollSection>
-
-            <ScrollSection id="whitepaper" title="Whitepaper">
-                {/* Content here */}
-            </ScrollSection>
+            ;
         </div>
     );
 }
