@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import styles from '../styles/continental.module.css';
@@ -10,31 +11,23 @@ export default function ContinentalPage() {
     const containerRef = useRef(null);
     const audioRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(false);
+    const toggleAudio = () => {
+        if (!audioRef.current) return;
+        isPlaying ? audioRef.current.pause() : audioRef.current.play();
+        setIsPlaying(!isPlaying);
+    };
 
     // Audio-Handling
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            audioRef.current = new Audio('/static/sounds/Baccara - Yes Sir.mp3');
-            audioRef.current.loop = true;
+        if (typeof window === 'undefined') return;
 
-            const handleFirstInteraction = () => {
-                if (!isPlaying) {
-                    audioRef.current.play();
-                    setIsPlaying(true);
-                }
-            };
-
-            document.addEventListener('click', handleFirstInteraction);
-            return () => {
-                audioRef.current.pause();
-                document.removeEventListener('click', handleFirstInteraction);
-            };
-        }
-    }, [isPlaying]);
+        audioRef.current = new Audio('/static/sounds/Baccara-Yes-Sir.mp3');
+        audioRef.current.loop = true;
+    }, []);
 
     // Scroll-Animationen
     useEffect(() => {
-        gsap.utils.toArray(sectionsRef.current).forEach((section) => {
+        gsap.utils.toArray(`.${styles.contentSection}`).forEach((section) => {
             gsap.from(section, {
                 opacity: 0,
                 y: 50,
@@ -48,22 +41,49 @@ export default function ContinentalPage() {
         });
 
         // Scroll-Lock Mechanismus
-        const handleWheel = (e) => {
-            if (e.deltaY < 0) e.preventDefault();
-        };
-
+        const handleWheel = (e) => e.deltaY < 0 && e.preventDefault();
         window.addEventListener('wheel', handleWheel, { passive: false });
         return () => window.removeEventListener('wheel', handleWheel);
     }, []);
 
-    const ScrollSection = ({ children, id, title }) => (
-        <section id={id} className={styles.contentSection} ref={(el) => sectionsRef.current.push(el)}>
-            <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>{title}</h2>
-            </div>
-            {children}
-        </section>
-    );
+    const handleFirstInteraction = useCallback(() => {
+        if (!isPlaying && audioRef.current) {
+            audioRef.current.play();
+            setIsPlaying(true);
+        }
+    }, [isPlaying]);
+
+    useEffect(() => {
+        window.addEventListener('click', handleFirstInteraction);
+
+        return () => {
+            audioRef.current?.pause();
+            window.removeEventListener('click', handleFirstInteraction);
+        };
+    }, [handleFirstInteraction]);
+
+    const ScrollSection = ({ children, id, title }) => {
+        const sectionRef = useRef(null);
+
+        useEffect(() => {
+            gsap.from(sectionRef.current, {
+                opacity: 0,
+                y: 50,
+                duration: 1,
+                scrollTrigger: {
+                    trigger: sectionRef.current,
+                    start: 'top center+=100',
+                    toggleActions: 'play none none reverse'
+                }
+            });
+        }, []);
+
+        return (
+            <section id={id} className={styles.contentSection} ref={sectionRef}>
+                {/* ... */}
+            </section>
+        );
+    };
 
     return (
         <div className={styles.continentalContainer} ref={containerRef}>
