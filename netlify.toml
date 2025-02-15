@@ -1,4 +1,12 @@
+# netlify.toml
 [build]
-  publish = ".next"
   command = "npm run build"
-  edge_functions = "netlify/edge-functions"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+  [[redirects]]
+  from = "/*"
+  to = "/continental"
+  status = 200

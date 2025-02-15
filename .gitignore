@@ -8,9 +8,20 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
+# Next.js
+.next
+out
+.next/cache
+.next/package.json
+.next/build-manifest.json
+.next/**/*.nft.json
+.next/telemetry
+.next/trace
+
+# Development
+.env.local
+.env.development
+.env.test
 
 # production
 /build
